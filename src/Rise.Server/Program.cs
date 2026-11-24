@@ -72,7 +72,8 @@ try
     var app = builder.Build();
     // apply Database migraticons on startup, not so wise in production (Use Generated SQL Scripts) 
     // See: https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying?tabs=dotnet-core-cli
-    if (app.Environment.IsDevelopment())
+    if (app.Environment.IsDevelopment() ||
+    app.Configuration.GetValue<bool>("Database:Initialize"))
     {
         using (var scope = app.Services.CreateScope())
         {
@@ -81,7 +82,11 @@ try
             // dbContext.Database.EnsureDeleted(); // Delete the database if it exists to clean it up if needed.
 
             dbContext.Database.Migrate(); // Creates the database if it doesn't exist and applies all migrations. See Readme.md for more info.
-            await dbSeeder.SeedAsync(); // Seeds the database with some test data.
+            if (app.Environment.IsDevelopment() ||
+    app.Configuration.GetValue<bool>("Database:Seed"))
+{
+    await dbSeeder.SeedAsync();
+}
         }
     }
     // Theses middlewares are strict in order of calling!
